@@ -570,13 +570,16 @@ textarea.form-control {
   border-top: 1px solid rgba(255,255,255,0.1);
 }
 
-/* ─── Contenido principal ───────────────────────────────────────── */
+/* ─── Contenido principal ────────────────────────────────────── */
 .main-content {
   flex: 1;
   margin-left: 260px;
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+  overflow-x: hidden;
+  min-width: 0;
+  max-width: calc(100vw - 260px);
 }
 
 /* ─── Top Bar ───────────────────────────────────────────────────── */
@@ -641,10 +644,12 @@ textarea.form-control {
 
 .dual-dot.offline { background: var(--danger); animation: none; }
 
-/* ─── Área de páginas ───────────────────────────────────────────── */
+/* ─── Área de páginas ────────────────────────────────────────── */
 .page-content {
   flex: 1;
   padding: 28px 32px;
+  overflow-x: hidden;
+  min-width: 0;
 }
 
 .page { display: none; animation: fade-in 0.3s ease both; }
@@ -767,7 +772,7 @@ textarea.form-control {
 /* ═══════════════════════════════════════════════════════════════════
    TABLA DE DATOS
    ═══════════════════════════════════════════════════════════════════ */
-.table-wrap { overflow-x: auto; }
+.table-wrap { overflow-x: auto; width: 100%; max-width: 100%; }
 
 .data-table {
   width: 100%;

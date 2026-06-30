@@ -599,7 +599,7 @@ textarea.form-control {
   box-shadow: 0 4px 16px rgba(0,0,0,0.08);
   position: fixed;
   top: 72px; /* justo debajo de la cabecera */
-  left: 310px; /* a la derecha del sidebar */
+  left: 0;   /* ancho completo de la pantalla */
   right: 0;
   z-index: 99;
 }

@@ -43,7 +43,7 @@ body {
   color: var(--texto);
   min-height: 100vh;
   overflow-x: hidden;
-  padding-top: 36px;
+  padding-top: 60px;
 }
 
 /* ─── Scrollbar personalizada ───────────────────────────────────── */
@@ -55,7 +55,7 @@ body {
    PANTALLA DE LOGIN
    ═══════════════════════════════════════════════════════════════════ */
 .login-screen {
-  min-height: calc(100vh - 36px);
+  min-height: calc(100vh - 60px);
   display: flex;
   flex-direction: column;
   position: relative;
@@ -95,22 +95,17 @@ body {
 }
 
 .gob-banner {
-  background: #f3f4f6;
-  padding: 6px 32px;
+  background: white;
+  padding: 0 24px;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 12px;
-  font-size: 0.72rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--texto);
-  border-bottom: 1px solid #d1d5db;
+  border-bottom: 3px solid var(--rojo);
+  box-shadow: 0 2px 12px rgba(0,0,0,0.10);
   position: fixed;
   top: 0; left: 0; right: 0;
   z-index: 10000;
-  height: 36px;
+  height: 60px;
 }
 
 .gob-flag {
@@ -433,12 +428,12 @@ textarea.form-control {
 /* ─── Sidebar ───────────────────────────────────────────────────── */
 .sidebar {
   width: 310px;
-  min-height: calc(100vh - 36px);
+  min-height: calc(100vh - 60px);
   background: linear-gradient(180deg, var(--azul-gov-dark) 0%, var(--azul-gov) 100%);
   display: flex;
   flex-direction: column;
   position: fixed;
-  left: 0; top: 36px; bottom: 0;
+  left: 0; top: 60px; bottom: 0;
   z-index: 100;
   transition: transform var(--transicion);
   box-shadow: 4px 0 24px rgba(0,0,0,0.15);
@@ -593,7 +588,7 @@ textarea.form-control {
   border-bottom: 1px solid #e5e7eb;
   box-shadow: var(--sombra-sm);
   position: sticky;
-  top: 36px;
+  top: 60px;
   z-index: 50;
 }
 

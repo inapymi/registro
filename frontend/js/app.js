@@ -49,6 +49,17 @@ document.addEventListener('DOMContentLoaded', () => {
       sidebar.classList.remove('open');
     }
   });
+
+  // ⇒ Restaurar sesión si estaba guardada en localStorage
+  const sesionGuardada = localStorage.getItem('inapymi_user');
+  if (sesionGuardada) {
+    try {
+      currentUser = JSON.parse(sesionGuardada);
+      iniciarApp();
+    } catch (e) {
+      localStorage.removeItem('inapymi_user');
+    }
+  }
 });
 
 /* ─── Partículas decorativas ────────────────────────────────────── */
@@ -110,6 +121,7 @@ function initLogin() {
     }
 
     currentUser = user;
+    localStorage.setItem('inapymi_user', JSON.stringify(user)); // Persistir sesión
     iniciarApp();
   });
 }
@@ -145,6 +157,7 @@ document.getElementById('logoutBtn').addEventListener('click', cerrarSesion);
 
 function cerrarSesion() {
   currentUser = null;
+  localStorage.removeItem('inapymi_user'); // Limpiar sesión guardada
   document.getElementById('appLayout').classList.remove('visible');
   document.getElementById('loginScreen').style.display = '';
   document.getElementById('loginForm').reset();

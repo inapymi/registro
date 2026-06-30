@@ -1,0 +1,4 @@
+﻿node_backend/node_modules/
+node_backend/inapymi_node.sqlite
+.env
+php_bin/

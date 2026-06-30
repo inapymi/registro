@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>INAPYMI – Sistema de Registro Post-Sismo</title>
+  <meta name="description" content="Sistema de registro de trabajadores y condiciones post-sismo. Instituto Nacional de Desarrollo de la Pequeña y Mediana Industria.">
+  <link rel="icon" href="https://www.inapymi.gob.ve/wp-content/uploads/2024/10/cropped-cropped-Logo-e1728871912141-150x150.png">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<!-- FRANJA SUPERIOR GUBERNAMENTAL -->
+<div class="gob-banner">
+  <img src="https://upload.wikimedia.org/wikipedia/commons/0/06/Flag_of_Venezuela.svg" alt="Bandera de Venezuela" class="gob-flag">
+  <span>Instituto Nacional de Desarrollo de la Pequeña y Mediana Industria (INAPYMI)</span>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════
+     PANTALLA DE LOGIN
+     ════════════════════════════════════════════════════════════════ -->
+<div id="loginScreen" class="login-screen">
+  <!-- Fondo -->
+  <div class="login-bg"></div>
+  <div class="login-particles" id="particles"></div>
+
+  <!-- Tarjeta de login -->
+  <div class="login-content">
+    <div class="login-card">
+      <div class="login-card-header">
+        <div class="login-logo-wrap">
+          <span class="login-logo-icon">🏛️</span>
+        </div>
+        <h1>Sistema de Registro<br>Post-Sismo</h1>
+        <p>Instituto Nacional de Desarrollo de la Pequeña y Mediana Industria</p>
+        <div class="login-dorado-bar"></div>
+      </div>
+
+      <div class="login-card-body">
+        <p class="login-subtitle">Acceso al Sistema</p>
+
+        <div id="loginError" class="alert alert-danger" style="display:none">
+          <span>⚠️</span>
+          <span id="loginErrorMsg">Credenciales inválidas.</span>
+        </div>
+
+        <form id="loginForm" novalidate>
+          <div class="form-group">
+            <label class="form-label" for="loginUser">Usuario <span class="required">*</span></label>
+            <div class="input-wrap">
+              <input type="text" id="loginUser" class="form-control" placeholder="usuario" autocomplete="username" required>
+              <span class="input-icon">👤</span>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="loginPass">Contraseña <span class="required">*</span></label>
+            <div class="input-wrap">
+              <input type="password" id="loginPass" class="form-control" placeholder="••••••••" autocomplete="current-password" required>
+              <span class="input-icon">🔒</span>
+            </div>
+          </div>
+
+          <button type="submit" id="loginBtn" class="btn btn-primary btn-block btn-lg">
+            <span class="btn-spinner"></span>
+            <span class="btn-text">🔐 &nbsp;Iniciar Sesión</span>
+          </button>
+        </form>
+
+        <div style="margin-top:20px; padding:14px; background:#f8faff; border-radius:10px; font-size:0.78rem; color:#6c7a8a; text-align:center; line-height:1.7;">
+          <strong style="display:block;margin-bottom:4px;">Credenciales de demostración</strong>
+          Admin: <code>admin</code> / <code>Inapymi2001</code><br>
+          Atención: <code>atencion1</code> / <code>Atencion2024</code><br>
+          Trabajador: <code>trabajador1</code> / <code>Trabajador2024</code>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════
+     APLICACIÓN PRINCIPAL (POST-LOGIN)
+     ════════════════════════════════════════════════════════════════ -->
+<div id="appLayout" class="app-layout">
+
+  <!-- ──── SIDEBAR ──── -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <div style="font-size:0.9rem;font-weight:800;color:white;letter-spacing:0.05em">
+        <span style="color:var(--dorado)">INA</span>PYMI
+      </div>
+      <div class="sidebar-logo-sub">Registro Post-Sismo</div>
+    </div>
+
+    <div class="sidebar-user" id="sidebarUser">
+      <div class="sidebar-user-avatar" id="userAvatar">A</div>
+      <div class="sidebar-user-info">
+        <div class="sidebar-user-name" id="userName">Cargando...</div>
+        <div class="sidebar-user-rol" id="userRol">—</div>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav" id="sidebarNav">
+      <!-- Se genera dinámicamente según el rol -->
+    </nav>
+
+    <div class="sidebar-footer">
+      <button class="nav-item" id="logoutBtn" style="color:rgba(255,255,255,0.6)">
+        <span class="nav-icon">🚪</span> Cerrar Sesión
+      </button>
+    </div>
+  </aside>
+
+  <!-- ──── CONTENIDO PRINCIPAL ──── -->
+  <div class="main-content">
+    <!-- Top Bar -->
+    <div class="topbar">
+      <div style="display:flex;align-items:center;gap:12px">
+        <button class="menu-toggle-btn" id="menuToggle">☰</button>
+        <div class="topbar-title">
+          <div class="page-icon" id="topbarIcon">📋</div>
+          <span id="topbarTitle">Dashboard</span>
+        </div>
+      </div>
+      <div class="topbar-actions">
+        <div class="backends-status">
+          <div class="backend-dot">
+            <div class="dot-indicator" id="nodeStatus"></div>
+            <span style="color:#6c7a8a">Node</span>
+          </div>
+          <div class="backend-dot">
+            <div class="dot-indicator" id="phpStatus"></div>
+            <span style="color:#6c7a8a">PHP</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Páginas -->
+    <div class="page-content">
+
+      <!-- ── DASHBOARD ── -->
+      <div id="page-dashboard" class="page active">
+        <div class="page-header">
+          <h2>📊 &nbsp;Panel de Control</h2>
+          <p>Resumen general del sistema de registro post-sismo</p>
+        </div>
+
+        <div class="stats-grid" id="statsGrid">
+          <div class="stat-card">
+            <div class="stat-icon">👷</div>
+            <div>
+              <div class="stat-value" id="statTotal">—</div>
+              <div class="stat-label">Trabajadores Registrados</div>
+            </div>
+          </div>
+          <div class="stat-card danger">
+            <div class="stat-icon">💔</div>
+            <div>
+              <div class="stat-value" id="statFallecidos">—</div>
+              <div class="stat-label">Con Fallecidos</div>
+            </div>
+          </div>
+          <div class="stat-card warning">
+            <div class="stat-icon">🏥</div>
+            <div>
+              <div class="stat-value" id="statHeridos">—</div>
+              <div class="stat-label">Con Heridos</div>
+            </div>
+          </div>
+          <div class="stat-card success">
+            <div class="stat-icon">🗺️</div>
+            <div>
+              <div class="stat-value" id="statEstados">—</div>
+              <div class="stat-label">Estados Representados</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title"><span class="dot"></span> Últimos registros</div>
+            <button class="btn btn-secondary btn-sm" onclick="navegarA('page-lista')">Ver todos →</button>
+          </div>
+          <div class="card-body">
+            <div class="table-wrap">
+              <table class="data-table" id="dashTable">
+                <thead>
+                  <tr>
+                    <th>Nombre completo</th>
+                    <th>Cédula</th>
+                    <th>Estado</th>
+                    <th>Ciudad</th>
+                    <th>Fallecidos</th>
+                    <th>Heridos</th>
+                    <th>Fecha</th>
+                  </tr>
+                </thead>
+                <tbody id="dashTableBody">
+                  <tr><td colspan="7"><div class="loader-wrap"><div class="loader"></div></div></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── LISTA TRABAJADORES ── -->
+      <div id="page-lista" class="page">
+        <div class="page-header">
+          <h2>📋 &nbsp;Registro de Trabajadores</h2>
+          <p>Consulta y gestión de todos los trabajadores registrados</p>
+        </div>
+
+        <div class="card" style="margin-bottom:20px">
+          <div class="card-body" style="padding:16px 24px">
+            <div class="search-bar">
+              <div class="search-input-wrap">
+                <span class="search-icon">🔍</span>
+                <input type="text" id="searchInput" class="search-input" placeholder="Buscar por nombre, apellido o cédula...">
+              </div>
+              <select id="filterEstado" class="form-control no-icon" style="width:auto;padding:10px 16px">
+                <option value="">Todos los estados</option>
+              </select>
+              <button class="btn btn-primary btn-sm" onclick="buscarTrabajadores()">Buscar</button>
+              <button class="btn btn-secondary btn-sm" onclick="limpiarBusqueda()">Limpiar</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title"><span class="dot"></span> Listado de trabajadores</div>
+            <div id="btnNuevoWrap" style="display:none">
+              <button class="btn btn-primary btn-sm" onclick="abrirModalNuevo()">+ Nuevo Registro</button>
+            </div>
+          </div>
+          <div class="card-body" style="padding:0">
+            <div class="table-wrap">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Trabajador</th>
+                    <th>Cédula</th>
+                    <th>Cargo / Gerencia</th>
+                    <th>Estado / Ciudad</th>
+                    <th>Vivienda</th>
+                    <th>Fallecidos</th>
+                    <th>Heridos</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody id="listaTableBody">
+                  <tr><td colspan="9"><div class="loader-wrap"><div class="loader"></div></div></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── AUDITORÍA ── -->
+      <div id="page-auditoria" class="page">
+        <div class="page-header">
+          <h2>🔎 &nbsp;Auditoría del Sistema</h2>
+          <p>Registro completo de todas las acciones realizadas en el sistema</p>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title"><span class="dot"></span> Log de actividad</div>
+            <button class="btn btn-secondary btn-sm" onclick="cargarAuditoria()">🔄 Actualizar</button>
+          </div>
+          <div class="card-body" id="auditoriaBody">
+            <div class="loader-wrap"><div class="loader"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── USUARIOS ── -->
+      <div id="page-usuarios" class="page">
+        <div class="page-header">
+          <h2>👥 &nbsp;Gestión de Usuarios</h2>
+          <p>Administración de cuentas de acceso al sistema</p>
+        </div>
+
+        <div class="card" style="margin-bottom:20px">
+          <div class="card-header">
+            <div class="card-title"><span class="dot"></span> Nuevo usuario</div>
+          </div>
+          <div class="card-body">
+            <form id="formNuevoUsuario" novalidate>
+              <div class="form-row cols-3">
+                <div class="form-group">
+                  <label class="form-label">Nombre <span class="required">*</span></label>
+                  <div class="input-wrap">
+                    <input type="text" id="nuNombre" class="form-control" required placeholder="Nombre">
+                    <span class="input-icon">👤</span>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Apellido <span class="required">*</span></label>
+                  <div class="input-wrap">
+                    <input type="text" id="nuApellido" class="form-control" required placeholder="Apellido">
+                    <span class="input-icon">👤</span>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Cédula <span class="required">*</span></label>
+                  <div class="input-wrap">
+                    <input type="text" id="nuCedula" class="form-control" required placeholder="V-00000000">
+                    <span class="input-icon">🪪</span>
+                  </div>
+                </div>
+              </div>
+              <div class="form-row cols-3">
+                <div class="form-group">
+                  <label class="form-label">Usuario <span class="required">*</span></label>
+                  <div class="input-wrap">
+                    <input type="text" id="nuUsername" class="form-control" required placeholder="username">
+                    <span class="input-icon">🔑</span>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Contraseña <span class="required">*</span></label>
+                  <div class="input-wrap">
+                    <input type="password" id="nuPassword" class="form-control" required placeholder="••••••••">
+                    <span class="input-icon">🔒</span>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Rol <span class="required">*</span></label>
+                  <div class="input-wrap">
+                    <select id="nuRol" class="form-control" required>
+                      <option value="">Seleccionar rol...</option>
+                      <option value="administrador">Administrador</option>
+                      <option value="atencion">Atención al Ciudadano</option>
+                      <option value="trabajador">Trabajador</option>
+                    </select>
+                    <span class="input-icon">🎭</span>
+                  </div>
+                </div>
+              </div>
+              <button type="submit" class="btn btn-primary">
+                <span class="btn-spinner"></span>
+                <span class="btn-text">➕ Crear Usuario</span>
+              </button>
+            </form>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title"><span class="dot"></span> Usuarios registrados</div>
+          </div>
+          <div class="card-body" style="padding:0">
+            <div class="table-wrap">
+              <table class="data-table">
+                <thead>
+                  <tr><th>#</th><th>Nombre</th><th>Usuario</th><th>Cédula</th><th>Rol</th><th>Registro</th></tr>
+                </thead>
+                <tbody id="usuariosTableBody">
+                  <tr><td colspan="6"><div class="loader-wrap"><div class="loader"></div></div></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── MI PERFIL (Trabajador) ── -->
+      <div id="page-perfil" class="page">
+        <div class="page-header">
+          <h2>🪪 &nbsp;Mi Información</h2>
+          <p>Consulte los datos registrados de su caso por el equipo de atención</p>
+        </div>
+
+        <div class="alert alert-info">
+          <span>ℹ️</span>
+          <span>Como usuario trabajador, puede consultar su información registrada. Para modificaciones, comuníquese con Atención al Ciudadano.</span>
+        </div>
+
+        <div id="perfilContent">
+          <div class="loader-wrap"><div class="loader"></div></div>
+        </div>
+      </div>
+
+    </div><!-- /page-content -->
+  </div><!-- /main-content -->
+</div><!-- /app-layout -->
+
+<!-- ════════════════════════════════════════════════════════════════
+     MODAL: FORMULARIO REGISTRO / EDICIÓN
+     ════════════════════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="modalRegistro">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">
+        <div class="modal-icon">📝</div>
+        <span id="modalRegistroTitle">Nuevo Registro</span>
+      </div>
+      <button class="modal-close" onclick="cerrarModal('modalRegistro')">✕</button>
+    </div>
+
+    <div class="modal-body">
+      <form id="formRegistro" novalidate>
+        <input type="hidden" id="regId">
+
+        <!-- DATOS PERSONALES -->
+        <div class="section-divider"><span class="section-divider-label">Datos Personales</span></div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Nombres <span class="required">*</span></label>
+            <div class="input-wrap">
+              <input type="text" id="regNombres" class="form-control" required placeholder="Nombres completos">
+              <span class="input-icon">👤</span>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Apellidos <span class="required">*</span></label>
+            <div class="input-wrap">
+              <input type="text" id="regApellidos" class="form-control" required placeholder="Apellidos completos">
+              <span class="input-icon">👤</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Número de Cédula <span class="required">*</span></label>
+            <div class="input-wrap">
+              <input type="text" id="regCedula" class="form-control" required placeholder="V-00000000">
+              <span class="input-icon">🪪</span>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Fecha de Nacimiento <span class="required">*</span></label>
+            <div class="input-wrap">
+              <input type="date" id="regFechaNac" class="form-control" required>
+              <span class="input-icon">📅</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- DATOS LABORALES -->
+        <div class="section-divider"><span class="section-divider-label">Datos Laborales</span></div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Cargo <span class="required">*</span></label>
+            <div class="input-wrap">
+              <input type="text" id="regCargo" class="form-control" required placeholder="Ej: Analista de Sistemas">
+              <span class="input-icon">💼</span>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Gerencia <span class="required">*</span></label>
+            <div class="input-wrap">
+              <input type="text" id="regGerencia" class="form-control" required placeholder="Ej: Gerencia de Tecnología">
+              <span class="input-icon">🏢</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Estado donde labora <span class="required">*</span></label>
+            <div class="input-wrap">
+              <select id="regEstado" class="form-control" required>
+                <option value="">Seleccionar estado...</option>
+                <option>Amazonas</option><option>Anzoátegui</option><option>Apure</option>
+                <option>Aragua</option><option>Barinas</option><option>Bolívar</option>
+                <option>Carabobo</option><option>Cojedes</option><option>Delta Amacuro</option>
+                <option>Distrito Capital (Caracas)</option><option>Falcón</option>
+                <option>Guárico</option><option>La Guaira (Vargas)</option><option>Lara</option>
+                <option>Mérida</option><option>Miranda</option><option>Monagas</option>
+                <option>Nueva Esparta</option><option>Portuguesa</option><option>Sucre</option>
+                <option>Táchira</option><option>Trujillo</option><option>Yaracuy</option>
+                <option>Zulia</option>
+              </select>
+              <span class="input-icon">🗺️</span>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Ciudad donde trabaja <span class="required">*</span></label>
+            <div class="input-wrap">
+              <input type="text" id="regCiudad" class="form-control" required placeholder="Ej: Caracas">
+              <span class="input-icon">🏙️</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Campo condicional: Torre (solo Caracas) -->
+        <div class="form-group" id="torraWrap" style="display:none">
+          <label class="form-label">Torre donde trabaja (Caracas) <span class="required">*</span></label>
+          <div class="input-wrap">
+            <select id="regTorre" class="form-control">
+              <option value="">Seleccionar torre...</option>
+              <option>Torre Norte</option>
+              <option>Torre Sur</option>
+              <option>Torre Este</option>
+              <option>Torre Oeste</option>
+              <option>Torre Central</option>
+              <option>Edificio Sede Principal</option>
+              <option>Otra</option>
+            </select>
+            <span class="input-icon">🏗️</span>
+          </div>
+        </div>
+
+        <!-- VIVIENDA -->
+        <div class="section-divider"><span class="section-divider-label">Situación de Vivienda</span></div>
+        <div class="form-group">
+          <label class="form-label">Dirección de casa o apartamento <span class="required">*</span></label>
+          <div class="input-wrap">
+            <input type="text" id="regDireccion" class="form-control" required placeholder="Urbanización, calle, edificio, piso, apto...">
+            <span class="input-icon">🏠</span>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Condiciones de la vivienda <span class="required">*</span></label>
+          <textarea id="regCondVivienda" class="form-control no-icon" required
+            placeholder="Describa el estado actual de la vivienda (daños estructurales, grietas, derrumbes, etc.)"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Condiciones de los habitantes <span class="required">*</span></label>
+          <textarea id="regCondHabitantes" class="form-control no-icon" required
+            placeholder="Estado general de las personas que habitan la vivienda (número de personas, condición física, emocional, etc.)"></textarea>
+        </div>
+
+        <!-- IMPACTO DEL SISMO -->
+        <div class="section-divider"><span class="section-divider-label">Impacto del Sismo</span></div>
+        <div class="form-row">
+          <label class="toggle-group" for="regFallecidos">
+            <input type="checkbox" id="regFallecidos">
+            <span class="toggle-label">⚰️ &nbsp;¿Hubo fallecidos a causa del terremoto?</span>
+          </label>
+          <label class="toggle-group" for="regHeridos">
+            <input type="checkbox" id="regHeridos">
+            <span class="toggle-label">🏥 &nbsp;¿Hubo heridos?</span>
+          </label>
+        </div>
+
+        <div class="form-group" style="margin-top:16px">
+          <label class="form-label">Observaciones adicionales</label>
+          <textarea id="regObservaciones" class="form-control no-icon"
+            placeholder="Cualquier información adicional relevante..."></textarea>
+        </div>
+      </form>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="cerrarModal('modalRegistro')">Cancelar</button>
+      <button class="btn btn-primary" id="btnGuardar" onclick="guardarRegistro()">
+        <span class="btn-spinner"></span>
+        <span class="btn-text">💾 &nbsp;Guardar en ambas bases de datos</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════
+     MODAL: VER DETALLE (solo lectura)
+     ════════════════════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="modalDetalle">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">
+        <div class="modal-icon">👁️</div>
+        <span>Detalle del Registro</span>
+      </div>
+      <button class="modal-close" onclick="cerrarModal('modalDetalle')">✕</button>
+    </div>
+    <div class="modal-body" id="modalDetalleBody">
+      <!-- Contenido dinámico -->
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="cerrarModal('modalDetalle')">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════
+     MODAL: CONFIRMAR ELIMINACIÓN
+     ════════════════════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="modalConfirmar">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-header">
+      <div class="modal-title">
+        <div class="modal-icon" style="background:linear-gradient(135deg,#dc2626,#7f1d1d)">⚠️</div>
+        <span>Confirmar eliminación</span>
+      </div>
+    </div>
+    <div class="modal-body">
+      <p style="color:var(--texto-muted);font-size:0.92rem">
+        ¿Está seguro de que desea <strong style="color:var(--danger)">desactivar</strong> este registro?<br>
+        El registro quedará inactivo pero los datos no serán eliminados permanentemente.
+      </p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="cerrarModal('modalConfirmar')">Cancelar</button>
+      <button class="btn btn-danger" id="btnConfirmarEliminar">Sí, desactivar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast container -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script src="js/app.js"></script>
+</body>
+</html>

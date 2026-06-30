@@ -341,9 +341,10 @@ document.getElementById('searchInput').addEventListener('input', debounce(buscar
 function initModales() {
   // Mostrar/ocultar campo de torre según estado seleccionado
   document.getElementById('regEstado').addEventListener('change', function() {
-    const esCaracas = this.value.includes('Caracas') || this.value.includes('Distrito Capital');
-    document.getElementById('torraWrap').style.display = esCaracas ? 'block' : 'none';
-    document.getElementById('regTorre').required = esCaracas;
+    const esDistritoCapital = this.value === 'Distrito Capital (Caracas)';
+    document.getElementById('torraWrap').style.display = esDistritoCapital ? 'block' : 'none';
+    document.getElementById('regTorre').required = esDistritoCapital;
+    if (!esDistritoCapital) document.getElementById('regTorre').value = '';
   });
 }
 

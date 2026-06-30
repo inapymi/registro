@@ -28,11 +28,13 @@
   <div class="login-content">
     <div class="login-card">
       <div class="login-card-header">
-        <div class="login-logo-wrap">
-          <span class="login-logo-icon">🏛️</span>
+        <div class="login-logo-wrap" style="display:flex; justify-content:center; align-items:center; margin-bottom:15px;">
+          <img src="img/logo.png?v=4" alt="Logo INAPYMI"
+               style="width:110px;
+                      filter: drop-shadow(0 4px 16px rgba(0,0,0,0.35));">
         </div>
         <h1>REGISTRO SITUACION<br>TRABAJADORES</h1>
-        <p>Instituto Nacional de Desarrollo de la Pequeña y Mediana Industria</p>
+        <p>Instituto Nacional de Desarrollo de la Pequeña y Mediana Industria (INAPYMI)</p>
         <div class="login-dorado-bar"></div>
       </div>
 
@@ -79,11 +81,14 @@
 
   <!-- ──── SIDEBAR ──── -->
   <aside class="sidebar" id="sidebar">
-    <div class="sidebar-logo">
+    <div class="sidebar-logo" style="display:flex; flex-direction:column; align-items:center;">
+      <img src="img/logo.png?v=4" alt="Logo INAPYMI"
+           style="width:120px; margin-bottom:10px;
+                  filter: drop-shadow(0 2px 12px rgba(0,0,0,0.4));">
       <div style="font-size:1.1rem;font-weight:800;letter-spacing:0.05em">
         <a href="#" onclick="location.reload(); return false;" style="color: var(--rojo-light); text-decoration: none; cursor: pointer;">INAPYMI</a>
       </div>
-      <div class="sidebar-logo-sub">REGISTRO SITUACION TRABAJADORES</div>
+      <div class="sidebar-logo-sub" style="text-align:center;">REGISTRO SITUACION TRABAJADORES</div>
     </div>
 
     <div class="sidebar-user" id="sidebarUser">
@@ -245,6 +250,7 @@
                     <th>Vivienda</th>
                     <th>Fallecidos</th>
                     <th>Heridos</th>
+                    <th>Certificación</th>
                     <th>Acciones</th>
                   </tr>
                 </thead>
@@ -375,6 +381,9 @@
         <div id="perfilContent">
           <div class="loader-wrap"><div class="loader"></div></div>
         </div>
+
+        <!-- Banner de estado del certificado — se muestra siempre -->
+        <div id="certStatusBanner" style="display:none; margin-top:24px;"></div>
       </div>
 
     </div><!-- /page-content -->

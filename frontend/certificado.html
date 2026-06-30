@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Certificado INAPYMI</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Inter:wght@300;400;500;600&display=swap');
+
+    * { margin:0; padding:0; box-sizing:border-box; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #f0f4f8;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 40px 20px;
+      min-height: 100vh;
+    }
+
+    .cert-page {
+      width: 794px;
+      background: white;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.18);
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* ─── Borde decorativo ─── */
+    .cert-page::before {
+      content: '';
+      position: absolute;
+      inset: 14px;
+      border: 2px solid #c8a951;
+      pointer-events: none;
+      z-index: 10;
+    }
+    .cert-page::after {
+      content: '';
+      position: absolute;
+      inset: 18px;
+      border: 1px solid #e0c97a;
+      pointer-events: none;
+      z-index: 10;
+    }
+
+    /* ─── Cabecera ─── */
+    .cert-header {
+      background: linear-gradient(135deg, #003087 0%, #00204e 100%);
+      padding: 32px 60px 24px;
+      text-align: center;
+      position: relative;
+    }
+
+    .cert-header-logos {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 18px;
+      margin-bottom: 14px;
+    }
+
+    .cert-logo-text {
+      font-family: 'Playfair Display', serif;
+      color: white;
+      font-size: 2.2rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-shadow: 0 2px 8px rgba(0,0,0,0.4);
+    }
+
+    .cert-logo-sub {
+      color: #c8a951;
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      margin-top: 4px;
+    }
+
+    .cert-inst-name {
+      color: rgba(255,255,255,0.9);
+      font-size: 0.78rem;
+      letter-spacing: 0.05em;
+      margin-top: 6px;
+    }
+
+    /* ─── Franja dorada ─── */
+    .cert-gold-bar {
+      height: 6px;
+      background: linear-gradient(90deg, #c8a951, #f0d060, #c8a951);
+    }
+
+    /* ─── Número de certificado ─── */
+    .cert-num-bar {
+      background: #f8f6f0;
+      text-align: center;
+      padding: 10px;
+      font-size: 0.72rem;
+      color: #666;
+      letter-spacing: 0.1em;
+      border-bottom: 1px solid #e8e0cc;
+    }
+
+    /* ─── Cuerpo principal ─── */
+    .cert-body {
+      padding: 36px 60px 28px;
+    }
+
+    .cert-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #003087;
+      text-align: center;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 6px;
+    }
+
+    .cert-subtitle {
+      text-align: center;
+      color: #888;
+      font-size: 0.78rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin-bottom: 24px;
+    }
+
+    .cert-divider {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 18px 0;
+    }
+    .cert-divider span { flex: 1; height: 1px; background: #c8a951; }
+    .cert-divider em { color: #c8a951; font-style: normal; font-size: 1.1rem; }
+
+    /* ─── Párrafo introductorio ─── */
+    .cert-intro {
+      text-align: justify;
+      line-height: 1.85;
+      font-size: 0.88rem;
+      color: #333;
+      margin-bottom: 20px;
+    }
+
+    /* ─── Datos del trabajador ─── */
+    .cert-worker-box {
+      background: #f4f7ff;
+      border: 1px solid #c5d3f0;
+      border-left: 5px solid #003087;
+      border-radius: 6px;
+      padding: 18px 24px;
+      margin: 20px 0;
+    }
+
+    .cert-worker-name {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: #003087;
+      margin-bottom: 10px;
+    }
+
+    .cert-worker-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px 24px;
+    }
+
+    .cert-field { font-size: 0.8rem; color: #555; }
+    .cert-field strong { color: #222; font-weight: 600; display: block; }
+
+    /* ─── Situación ─── */
+    .cert-situacion {
+      background: #fffbf0;
+      border: 1px solid #e8d48a;
+      border-radius: 6px;
+      padding: 14px 20px;
+      margin: 16px 0;
+      font-size: 0.83rem;
+      color: #555;
+      line-height: 1.7;
+    }
+
+    .cert-situacion-title {
+      font-weight: 700;
+      color: #8a6000;
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 6px;
+    }
+
+    /* ─── Texto de validación ─── */
+    .cert-validation {
+      text-align: justify;
+      line-height: 1.85;
+      font-size: 0.83rem;
+      color: #444;
+      margin: 18px 0;
+    }
+
+    /* ─── Fecha y lugar ─── */
+    .cert-date-location {
+      text-align: center;
+      margin: 20px 0 14px;
+      font-size: 0.83rem;
+      color: #555;
+    }
+
+    /* ─── Firmas ─── */
+    .cert-firmas {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      margin-top: 28px;
+    }
+
+    .cert-firma-block { text-align: center; }
+
+    .cert-firma-line {
+      height: 1px;
+      background: #333;
+      margin: 0 20px 8px;
+    }
+
+    .cert-firma-name {
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: #222;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .cert-firma-cargo {
+      font-size: 0.7rem;
+      color: #666;
+      margin-top: 2px;
+    }
+
+    /* ─── Sello húmedo ─── */
+    .cert-sello-wrap {
+      position: relative;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin: -10px 0 10px;
+    }
+
+    .cert-sello {
+      width: 110px;
+      height: 110px;
+      border: 4px solid #003087;
+      border-radius: 50%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 10px;
+      color: #003087;
+      opacity: 0.75;
+      transform: rotate(-12deg);
+      background: transparent;
+      position: relative;
+    }
+
+    .cert-sello::before {
+      content: '';
+      position: absolute;
+      inset: 6px;
+      border: 1.5px dashed #003087;
+      border-radius: 50%;
+    }
+
+    .cert-sello-text {
+      font-size: 0.48rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      line-height: 1.3;
+    }
+
+    .cert-sello-logo {
+      font-size: 1.1rem;
+      font-weight: 800;
+      color: #003087;
+      letter-spacing: 0.06em;
+    }
+
+    /* ─── Pie de página ─── */
+    .cert-footer {
+      background: #f0f4f8;
+      border-top: 1px solid #ddd;
+      padding: 12px 60px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.65rem;
+      color: #888;
+      letter-spacing: 0.05em;
+    }
+
+    .cert-qr-placeholder {
+      width: 50px;
+      height: 50px;
+      border: 1.5px solid #bbb;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.5rem;
+      color: #bbb;
+      text-align: center;
+    }
+
+    /* ─── Botones (solo pantalla, no imprime) ─── */
+    .cert-actions {
+      text-align: center;
+      padding: 20px;
+      background: #e8eef8;
+    }
+
+    .cert-btn {
+      padding: 10px 28px;
+      background: #003087;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      margin: 0 6px;
+    }
+
+    .cert-btn:hover { background: #00204e; }
+    .cert-btn.secondary { background: #6b7280; }
+
+    @media print {
+      body { background: white; padding: 0; }
+      .cert-page { box-shadow: none; width: 100%; }
+      .cert-actions { display: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <div>
+    <!-- Botones de acción (solo pantalla) -->
+    <div class="cert-actions" id="certActions">
+      <button class="cert-btn" onclick="window.print()">🖨️ Imprimir / Guardar PDF</button>
+      <button class="cert-btn secondary" onclick="window.close()">✕ Cerrar</button>
+    </div>
+
+    <!-- Certificado -->
+    <div class="cert-page" id="certPage">
+
+      <!-- Cabecera institucional -->
+      <div class="cert-header">
+        <div class="cert-header-logos">
+          <div>
+            <div class="cert-logo-text">INAPYMI</div>
+            <div class="cert-logo-sub">República Bolivariana de Venezuela</div>
+            <div class="cert-inst-name">Instituto Nacional de Desarrollo de la Pequeña y Mediana Industria</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Franja dorada -->
+      <div class="cert-gold-bar"></div>
+
+      <!-- Número de certificado -->
+      <div class="cert-num-bar" id="certNumBar">CERTIFICADO N° ...</div>
+
+      <!-- Cuerpo -->
+      <div class="cert-body">
+        <div class="cert-title">Certificado de Situación</div>
+        <div class="cert-subtitle">Registro de Situación de Trabajadores — Post Sismo</div>
+
+        <div class="cert-divider"><span></span><em>✦</em><span></span></div>
+
+        <p class="cert-intro" id="certIntro">
+          El Instituto Nacional de Desarrollo de la Pequeña y Mediana Industria (<strong>INAPYMI</strong>), en ejercicio de sus atribuciones institucionales y en cumplimiento de los protocolos de atención establecidos, hace constar que el trabajador identificado a continuación fue debidamente registrado en el Sistema de Registro de Situación de Trabajadores, y que tras las revisiones exhaustivas realizadas por el personal competente, se certifica la veracidad de la información que se detalla a continuación:
+        </p>
+
+        <!-- Datos del trabajador -->
+        <div class="cert-worker-box">
+          <div class="cert-worker-name" id="certNombre">—</div>
+          <div class="cert-worker-grid">
+            <div class="cert-field"><strong id="certCedula">—</strong>Cédula de Identidad</div>
+            <div class="cert-field"><strong id="certCargo">—</strong>Cargo</div>
+            <div class="cert-field"><strong id="certGerencia">—</strong>Gerencia / Dependencia</div>
+            <div class="cert-field"><strong id="certEstado">—</strong>Estado donde labora</div>
+          </div>
+        </div>
+
+        <!-- Situación reportada -->
+        <div class="cert-situacion">
+          <div class="cert-situacion-title">⚠ Situación Reportada</div>
+          <span id="certSituacion">—</span>
+        </div>
+
+        <p class="cert-validation" id="certValidation">
+          El presente documento ha sido revisado y validado por el personal autorizado de INAPYMI, dando fe de que la información contenida en el mismo fue suministrada directamente por el trabajador y verificada de acuerdo con los procedimientos institucionales vigentes. Este certificado tiene carácter oficial y podrá ser presentado ante cualquier instancia que lo requiera.
+        </p>
+
+        <!-- Fecha, hora y lugar -->
+        <div class="cert-date-location" id="certFechaLugar">
+          Caracas, Venezuela — <span id="certFecha">—</span>
+        </div>
+
+        <!-- Sello húmedo centrado -->
+        <div class="cert-sello-wrap">
+          <div class="cert-sello">
+            <div class="cert-sello-logo">INAPYMI</div>
+            <div class="cert-sello-text">República<br>Bolivariana<br>de Venezuela</div>
+            <div class="cert-sello-text" style="margin-top:3px">Sello Oficial</div>
+          </div>
+        </div>
+
+        <!-- Firmas -->
+        <div class="cert-firmas">
+          <div class="cert-firma-block">
+            <div class="cert-firma-line"></div>
+            <div class="cert-firma-name" id="certRevisorNombre">Revisor Autorizado</div>
+            <div class="cert-firma-cargo" id="certRevisorCargo">Personal Autorizado — INAPYMI</div>
+          </div>
+          <div class="cert-firma-block">
+            <div class="cert-firma-line"></div>
+            <div class="cert-firma-name">INAPYMI</div>
+            <div class="cert-firma-cargo">Presidencia / Dirección General</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pie de página -->
+      <div class="cert-footer">
+        <div>
+          <div>Instituto Nacional de Desarrollo de la Pequeña y Mediana Industria</div>
+          <div>www.inapymi.gob.ve — Venezuela</div>
+        </div>
+        <div class="cert-qr-placeholder">Código<br>Verificación</div>
+        <div style="text-align:right">
+          <div id="certFooterNum">Certificado N° —</div>
+          <div id="certFooterFecha">Emitido: —</div>
+        </div>
+      </div>
+
+    </div><!-- /cert-page -->
+  </div>
+
+  <script>
+    // Leer parámetros de la URL
+    const params = new URLSearchParams(window.location.search);
+    const data = {};
+    for (const [k, v] of params.entries()) data[k] = decodeURIComponent(v);
+
+    // Número de certificado: CERT-AÑO-ID
+    const certNum = `CERT-${new Date().getFullYear()}-${String(data.id || '0').padStart(4,'0')}`;
+
+    // Fecha formateada
+    const fecha = data.cert_fecha
+      ? new Date(data.cert_fecha).toLocaleString('es-VE', {
+          day:'2-digit', month:'long', year:'numeric',
+          hour:'2-digit', minute:'2-digit'
+        })
+      : new Date().toLocaleString('es-VE', { day:'2-digit', month:'long', year:'numeric', hour:'2-digit', minute:'2-digit' });
+
+    // Situación
+    const fallecidos = data.hubo_fallecidos === '1' ? '⚠ Reportó fallecidos en el grupo familiar.' : '✔ Sin fallecidos reportados.';
+    const heridos    = data.hubo_heridos    === '1' ? '⚠ Reportó heridos en el grupo familiar.' : '✔ Sin heridos reportados.';
+    const situacionTexto = `Vivienda: ${data.direccion_vivienda || '—'}. Condición: ${data.condicion_vivienda || '—'}. ${fallecidos} ${heridos}${data.observaciones ? ' Observaciones: ' + data.observaciones : ''}`;
+
+    // Poblar campos
+    document.getElementById('certNumBar').textContent     = `CERTIFICADO N° ${certNum}`;
+    document.getElementById('certNombre').textContent     = `${data.nombres || ''} ${data.apellidos || ''}`.trim();
+    document.getElementById('certCedula').textContent     = data.cedula || '—';
+    document.getElementById('certCargo').textContent      = data.cargo || '—';
+    document.getElementById('certGerencia').textContent   = data.gerencia || '—';
+    document.getElementById('certEstado').textContent     = data.estado_laboral || '—';
+    document.getElementById('certSituacion').textContent  = situacionTexto;
+    document.getElementById('certFecha').textContent      = fecha;
+    document.getElementById('certRevisorNombre').textContent = data.cert_nombre_revisor || 'Personal Autorizado';
+    document.getElementById('certRevisorCargo').textContent  = data.revisor_cargo || 'Atención al Ciudadano — INAPYMI';
+    document.getElementById('certFooterNum').textContent  = `Certificado N° ${certNum}`;
+    document.getElementById('certFooterFecha').textContent = `Emitido: ${fecha}`;
+  </script>
+</body>
+</html>

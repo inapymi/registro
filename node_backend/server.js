@@ -87,6 +87,12 @@ db.exec(`
   );
 `);
 
+// Agregar columnas de certificación si no existen (migración segura)
+try { db.exec(`ALTER TABLE trabajadores ADD COLUMN cert_estado TEXT DEFAULT 'pendiente'`); } catch(e) {}
+try { db.exec(`ALTER TABLE trabajadores ADD COLUMN cert_fecha TEXT`); } catch(e) {}
+try { db.exec(`ALTER TABLE trabajadores ADD COLUMN cert_por INTEGER`); } catch(e) {}
+try { db.exec(`ALTER TABLE trabajadores ADD COLUMN cert_nombre_revisor TEXT`); } catch(e) {}
+
 // Usuarios por defecto (personal administrativo)
 db.exec(`
   INSERT OR IGNORE INTO usuarios (username,password,rol,nombre,apellido,cedula) VALUES
@@ -218,7 +224,7 @@ const server = http.createServer(async (req, res) => {
         const t = db.prepare('SELECT * FROM trabajadores WHERE id=? AND activo=1').get(id);
         return t ? send(res, 200, t) : send(res, 404, { error: 'No encontrado.' });
       }
-      if (method === 'POST') {
+      if (method === 'POST' && !id) {
         const d = await parseBody(req);
         try {
           const info = db.prepare(`
@@ -284,6 +290,48 @@ const server = http.createServer(async (req, res) => {
         auditar('trabajadores','DELETE',id,d.usuario_id,`Desactivado ID:${id}`);
         return send(res, 200, { message: 'Registro desactivado.' });
       }
+
+      // ── /api/trabajadores/:id/en-revision  ─────────────────────────
+      if (id && subaction === 'en-revision' && method === 'POST') {
+        const d = await parseBody(req);
+        const uId = d.usuario_id || null;
+        const sol = db.prepare('SELECT rol,nombre,apellido FROM usuarios WHERE id=? AND activo=1').get(uId);
+        if (!sol || !['administrador','atencion'].includes(sol.rol))
+          return send(res,403,{error:'Sin permisos.'});
+        db.prepare(
+          "UPDATE trabajadores SET cert_estado='en_revision',cert_fecha=datetime('now','localtime'),cert_por=?,cert_nombre_revisor=? WHERE id=? AND activo=1"
+        ).run(uId, `${sol.nombre} ${sol.apellido}`, id);
+        auditar('trabajadores','EN_REVISION',id,uId,`Puesto en revisión por ${sol.nombre} ${sol.apellido}`);
+        return send(res,200,{message:'Registro marcado en revisión.'});
+      }
+
+      // ── /api/trabajadores/:id/certificar  ──────────────────────────
+      if (id && subaction === 'certificar' && method === 'POST') {
+        const d = await parseBody(req);
+        const uId = d.usuario_id || null;
+        const sol = db.prepare('SELECT rol,nombre,apellido FROM usuarios WHERE id=? AND activo=1').get(uId);
+        if (!sol || !['administrador','atencion'].includes(sol.rol))
+          return send(res,403,{error:'Sin permisos.'});
+        db.prepare(
+          "UPDATE trabajadores SET cert_estado='certificado',cert_fecha=datetime('now','localtime'),cert_por=?,cert_nombre_revisor=? WHERE id=? AND activo=1"
+        ).run(uId, `${sol.nombre} ${sol.apellido}`, id);
+        auditar('trabajadores','CERTIFICADO',id,uId,`Certificado por ${sol.nombre} ${sol.apellido}`);
+        return send(res,200,{message:'Certificado emitido correctamente.'});
+      }
+
+      // ── /api/trabajadores/:id/descertificar  ───────────────────────
+      if (id && subaction === 'descertificar' && method === 'POST') {
+        const d = await parseBody(req);
+        const uId = d.usuario_id || null;
+        const sol = db.prepare('SELECT rol FROM usuarios WHERE id=? AND activo=1').get(uId);
+        if (!sol || sol.rol !== 'administrador')
+          return send(res,403,{error:'Solo el administrador puede revertir.'});
+        db.prepare(
+          "UPDATE trabajadores SET cert_estado='pendiente',cert_fecha=NULL,cert_por=NULL,cert_nombre_revisor=NULL WHERE id=? AND activo=1"
+        ).run(id);
+        auditar('trabajadores','DESCERTIFICADO',id,uId,`Certificación revertida ID:${id}`);
+        return send(res,200,{message:'Certificación revertida.'});
+      }
     }
 
     // ── /api/estadisticas ────────────────────────────────────────────
@@ -310,7 +358,7 @@ const server = http.createServer(async (req, res) => {
       if (method === 'GET') {
         return send(res, 200, db.prepare('SELECT id,username,rol,nombre,apellido,cedula,creado_en,activo FROM usuarios').all());
       }
-      if (method === 'POST') {
+      if (method === 'POST' && !id) {
         const d = await parseBody(req);
         try {
           const info = db.prepare(

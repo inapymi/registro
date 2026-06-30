@@ -50,12 +50,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // ⇒ Restaurar sesión si estaba guardada en localStorage
+  // ⇒ Restaurar sesión: esperar al health-check para que nodeOnline esté actualizado
   const sesionGuardada = localStorage.getItem('inapymi_user');
   if (sesionGuardada) {
     try {
       currentUser = JSON.parse(sesionGuardada);
-      iniciarApp();
+      // Esperar que verificarBackends termine antes de cargar la página
+      verificarBackends().then(() => iniciarApp());
     } catch (e) {
       localStorage.removeItem('inapymi_user');
     }
@@ -291,21 +292,26 @@ async function cargarDashboard() {
    ═══════════════════════════════════════════════════════════════════ */
 async function cargarLista(params = {}) {
   const tbody = document.getElementById('listaTableBody');
-  tbody.innerHTML = `<tr><td colspan="9"><div class="loader-wrap"><div class="loader"></div></div></td></tr>`;
+  tbody.innerHTML = `<tr><td colspan="10"><div class="loader-wrap"><div class="loader"></div></div></td></tr>`;
 
   try {
     const qs = new URLSearchParams(params).toString();
     const lista = await apiFetch(`/trabajadores${qs ? '?'+qs : ''}`);
 
     if (!lista.length) {
-      tbody.innerHTML = `<tr><td colspan="9"><div class="empty-state"><div class="empty-icon">📋</div><h3>No se encontraron registros</h3><p>Intente con otros filtros o registre un nuevo trabajador</p></div></td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="10"><div class="empty-state"><div class="empty-icon">📋</div><h3>No se encontraron registros</h3><p>Intente con otros filtros o registre un nuevo trabajador</p></div></td></tr>`;
       return;
     }
 
     const puedeEditar   = ['administrador','atencion'].includes(currentUser.rol);
     const puedeEliminar = currentUser.rol === 'administrador';
 
-    tbody.innerHTML = lista.map((t, i) => `
+    tbody.innerHTML = lista.map((t, i) => {
+      let certHtml = '<span class="badge badge-gris">Pendiente</span>';
+      if (t.cert_estado === 'en_revision') certHtml = '<span class="badge badge-dorado" title="Revisado por '+t.cert_nombre_revisor+'">En Revisión</span>';
+      else if (t.cert_estado === 'certificado') certHtml = '<span class="badge badge-verde" title="Certificado por '+t.cert_nombre_revisor+'">Certificado</span>';
+
+      return `
       <tr>
         <td style="color:var(--texto-muted);font-size:0.78rem">${i+1}</td>
         <td>
@@ -324,17 +330,55 @@ async function cargarLista(params = {}) {
         <td style="max-width:180px;font-size:0.8rem">${truncar(t.condicion_vivienda, 60)}</td>
         <td>${t.hubo_fallecidos ? '<span class="badge badge-rojo">⚰️ Sí</span>' : '<span class="badge badge-verde">No</span>'}</td>
         <td>${t.hubo_heridos   ? '<span class="badge badge-dorado">🏥 Sí</span>' : '<span class="badge badge-verde">No</span>'}</td>
+        <td>${certHtml}</td>
         <td>
           <div class="actions">
             <button class="btn btn-secondary btn-sm" title="Ver detalle" onclick="verDetalle(${t.id})">👁️</button>
-            ${puedeEditar   ? `<button class="btn btn-primary btn-sm" title="Editar" onclick="abrirModalEditar(${t.id})">✏️</button>` : ''}
+            ${puedeEditar ? `
+              ${t.cert_estado !== 'certificado' ? `<button class="btn btn-primary btn-sm" title="Editar" onclick="abrirModalEditar(${t.id})">✏️</button>` : ''}
+              ${t.cert_estado === 'pendiente' ? `<button class="btn btn-secondary btn-sm" title="Poner en revisión" onclick="cambiarCert(${t.id}, 'en-revision')">⏳</button>` : ''}
+              ${t.cert_estado === 'en_revision' ? `<button class="btn btn-success btn-sm" style="background:#16a34a;color:white;border:none" title="Certificar" onclick="cambiarCert(${t.id}, 'certificar')">✅</button>` : ''}
+            ` : ''}
+            ${t.cert_estado === 'certificado' ? `<button class="btn btn-primary btn-sm" title="Ver PDF" onclick="abrirCertificado(${t.id})">📄</button>` : ''}
+            ${t.cert_estado === 'certificado' && currentUser.rol === 'administrador' ? `<button class="btn btn-danger btn-sm" title="Revertir certificación" onclick="cambiarCert(${t.id}, 'descertificar')">↩️</button>` : ''}
             ${puedeEliminar ? `<button class="btn btn-danger btn-sm" title="Desactivar" onclick="confirmarEliminar(${t.id})">🗑️</button>` : ''}
           </div>
         </td>
       </tr>
-    `).join('');
+      `;
+    }).join('');
   } catch (err) {
-    tbody.innerHTML = `<tr><td colspan="9"><div class="alert alert-danger" style="margin:16px">⚠️ ${err.message}</div></td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="10"><div class="alert alert-danger" style="margin:16px">⚠️ ${err.message}</div></td></tr>`;
+  }
+}
+
+async function cambiarCert(id, accion) {
+  let mensaje = '';
+  if (accion === 'en-revision') mensaje = '¿Marcar este registro como EN REVISIÓN?';
+  if (accion === 'certificar') mensaje = '¿Desea CERTIFICAR este registro? Esto emitirá el certificado final.';
+  if (accion === 'descertificar') mensaje = '¿Desea REVERTIR la certificación? El registro volverá a estado pendiente.';
+
+  if (!confirm(mensaje)) return;
+
+  try {
+    const res = await fetchJSON(`${API_NODE}/trabajadores/${id}/${accion}`, 'POST', { usuario_id: currentUser.id });
+    toast('success', 'Éxito', res.message);
+    cargarLista();
+  } catch (err) {
+    toast('error', 'Error', err.message);
+  }
+}
+
+async function abrirCertificado(id) {
+  // Obtenemos los datos del trabajador para pasarlos por URL al PDF (en un escenario real podría ser un GET)
+  try {
+    const list = await apiFetch(`/trabajadores`);
+    const t = list.find(x => x.id === id);
+    if (!t) return toast('error', 'Error', 'No encontrado');
+    const qs = new URLSearchParams(t).toString();
+    window.open(`certificado.html?${qs}`, '_blank', 'width=840,height=900');
+  } catch (err) {
+    toast('error', 'Error', err.message);
   }
 }
 
@@ -750,11 +794,8 @@ document.querySelectorAll('.modal-overlay').forEach(overlay => {
    HELPERS: HTTP
    ═══════════════════════════════════════════════════════════════════ */
 async function apiFetch(endpoint, method = 'GET', body = null, base = null) {
-  // Si no se indica base, intentar Node
-  if (!base) {
-    if (nodeOnline) base = API_NODE;
-    else throw new Error('El servidor no está disponible en este momento.');
-  }
+  // Siempre intentar Node (no bloquear por nodeOnline; si falla la red, se lanza el error real)
+  if (!base) base = API_NODE;
 
   const opts = {
     method,
@@ -893,3 +934,90 @@ function debounce(fn, delay) {
     timer = setTimeout(() => fn(...args), delay);
   };
 }
+
+/* ═══════════════════════════════════════════════════════════════════
+   PERFIL DEL TRABAJADOR
+   ═══════════════════════════════════════════════════════════════════ */
+async function cargarPerfil() {
+  const container = document.getElementById('perfilContent');
+  const banner    = document.getElementById('certStatusBanner');
+  if (!container) return;
+  container.innerHTML = `<div class="loader-wrap"><div class="loader"></div></div>`;
+  if (banner) banner.style.display = 'none';
+
+  try {
+    const list = await apiFetch(`/trabajadores`);
+    const username = currentUser.username;
+    let t = list.find(x => x.cedula === username);
+
+    if (!t) {
+      container.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-icon">⚠️</div>
+          <h3>No se encontraron sus datos</h3>
+          <p>Usted está registrado como trabajador, pero aún no se ha ingresado su formulario en el sistema. Comuníquese con Atención al Ciudadano.</p>
+        </div>`;
+      return;
+    }
+
+    // ── Banner prominente de certificación ──────────────────────────
+    if (banner) {
+      banner.style.display = 'block';
+      if (t.cert_estado === 'pendiente' || !t.cert_estado) {
+        banner.innerHTML = `
+          <div style="background:linear-gradient(135deg,#1e3a5f,#1d4ed8);border-radius:16px;padding:28px 32px;color:white;display:flex;align-items:center;gap:24px;box-shadow:0 8px 32px rgba(29,78,216,0.3)">
+            <div style="font-size:3rem;flex-shrink:0">🔍</div>
+            <div>
+              <div style="font-size:1.1rem;font-weight:700;margin-bottom:6px;">Estado del Certificado: <span style="color:#fbbf24">PENDIENTE DE EVALUACIÓN</span></div>
+              <div style="font-size:0.9rem;opacity:0.85;line-height:1.5;">Su información registrada se encuentra actualmente <strong>en espera de revisión</strong> por parte del personal de INAPYMI. Una vez que los funcionarios competentes realicen las inspecciones de rigor, se le notificará aquí y se emitirá su certificado de veracidad.</div>
+            </div>
+          </div>`;
+      } else if (t.cert_estado === 'en_revision') {
+        banner.innerHTML = `
+          <div style="background:linear-gradient(135deg,#78350f,#d97706);border-radius:16px;padding:28px 32px;color:white;display:flex;align-items:center;gap:24px;box-shadow:0 8px 32px rgba(217,119,6,0.35)">
+            <div style="font-size:3rem;flex-shrink:0;animation:spin 2s linear infinite">⏳</div>
+            <div>
+              <div style="font-size:1.1rem;font-weight:700;margin-bottom:6px;">Estado del Certificado: <span style="color:#fef08a">EN REVISIÓN</span></div>
+              <div style="font-size:0.9rem;opacity:0.9;line-height:1.5;">Su expediente está siendo <strong>analizado minuciosamente</strong> por el funcionario <strong>${t.cert_nombre_revisor || 'del equipo de Atención al Ciudadano'}</strong>. Una vez concluidas las inspecciones de rigor, se emitirá el certificado que avala la veracidad de la información contentiva en el registro.</div>
+            </div>
+          </div>`;
+      } else if (t.cert_estado === 'certificado') {
+        banner.innerHTML = `
+          <div style="background:linear-gradient(135deg,#14532d,#16a34a);border-radius:16px;padding:28px 32px;color:white;display:flex;align-items:center;gap:24px;box-shadow:0 8px 32px rgba(22,163,74,0.35)">
+            <div style="font-size:3rem;flex-shrink:0">✅</div>
+            <div style="flex:1">
+              <div style="font-size:1.1rem;font-weight:700;margin-bottom:6px;">Estado del Certificado: <span style="color:#bbf7d0">CERTIFICADO Y VERIFICADO</span></div>
+              <div style="font-size:0.9rem;opacity:0.9;line-height:1.5;margin-bottom:14px;">Su información ha sido <strong>certificada oficialmente</strong> por ${t.cert_nombre_revisor || 'INAPYMI'} tras las inspecciones pertinentes. El certificado de veracidad está disponible para su descarga.</div>
+              <button onclick="abrirCertificado(${t.id})" style="background:white;color:#14532d;border:none;padding:10px 24px;border-radius:8px;font-weight:700;font-size:0.9rem;cursor:pointer;display:inline-flex;align-items:center;gap:8px;">
+                📄 Ver &amp; Descargar Certificado PDF
+              </button>
+            </div>
+          </div>`;
+      }
+    }
+
+    // ── Tarjeta de datos del trabajador ─────────────────────────────
+    container.innerHTML = `
+      <div class="profile-card" style="margin-bottom:20px;">
+        <div class="profile-name">${t.nombres} ${t.apellidos}</div>
+        <div class="profile-ci">Cédula: ${t.cedula} &nbsp;|&nbsp; Cargo: ${t.cargo} &nbsp;|&nbsp; Gerencia: ${t.gerencia}</div>
+      </div>
+      <div class="profile-grid">
+        ${campo('📅 Fecha de Nacimiento', formatFecha(t.fecha_nacimiento).split(' ')[0])}
+        ${campo('🗺️ Estado Laboral', t.estado_laboral)}
+        ${campo('🏙️ Ciudad de Trabajo', t.ciudad_trabajo)}
+        ${t.torre_trabajo ? campo('🏗️ Torre', t.torre_trabajo) : ''}
+        ${campo('🏠 Dirección Vivienda', t.direccion_vivienda)}
+        ${campo('🏚️ Condición Vivienda', t.condicion_vivienda)}
+        ${campo('👨‍👩‍👧 Condición Habitantes', t.condicion_habitantes)}
+        ${campo('⚰️ ¿Hubo Fallecidos?', t.hubo_fallecidos ? '⚠️ Sí' : '✅ No')}
+        ${campo('🏥 ¿Hubo Heridos?', t.hubo_heridos ? '⚠️ Sí' : '✅ No')}
+        ${t.observaciones ? campo('📝 Observaciones', t.observaciones) : ''}
+      </div>
+    `;
+
+  } catch (err) {
+    container.innerHTML = `<div class="alert alert-danger">⚠️ ${err.message}</div>`;
+  }
+}
+

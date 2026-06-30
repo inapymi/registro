@@ -551,14 +551,19 @@ async function cargarUsuarios() {
   try {
     const users = await apiFetch('/usuarios');
     const rolesLabel = { administrador:'🔴 Admin', atencion:'🟡 Atención', trabajador:'🟢 Trabajador' };
+    const puedeReset = currentUser && ['administrador','atencion'].includes(currentUser.rol);
     tbody.innerHTML = users.map((u, i) => `
       <tr>
         <td style="color:var(--texto-muted)">${i+1}</td>
         <td><strong>${u.nombre} ${u.apellido}</strong></td>
-        <td><code>${u.username}</code></td>
-        <td>${u.cedula}</td>
+        <td><code>${u.username}</code><br><small style="color:var(--texto-muted)">${u.cedula}</small></td>
         <td>${rolesLabel[u.rol] || u.rol}</td>
         <td style="font-size:0.78rem;color:var(--texto-muted)">${formatFecha(u.creado_en)}</td>
+        <td>${puedeReset && u.rol === 'trabajador' ? `
+          <button class="btn btn-secondary btn-sm" onclick="resetearPassword(${u.id}, '${u.nombre} ${u.apellido}')">
+            🔄 Restablecer
+          </button>` : '—'}
+        </td>
       </tr>
     `).join('');
   } catch (err) {
@@ -590,6 +595,59 @@ document.getElementById('formNuevoUsuario').addEventListener('submit', async (e)
   }
   setLoading(btn, false);
 });
+
+/* ═══════════════════════════════════════════════════════════════
+   CAMBIAR / RESTABLECER CONTRASEÑA
+   ═══════════════════════════════════════════════════════════════ */
+function abrirModalCambiarPass() {
+  document.getElementById('passActual').value = '';
+  document.getElementById('passNueva').value = '';
+  document.getElementById('passConfirmar').value = '';
+  abrirModal('modalCambiarPass');
+}
+
+async function guardarNuevaPassword() {
+  const actual     = document.getElementById('passActual').value;
+  const nueva      = document.getElementById('passNueva').value;
+  const confirmar  = document.getElementById('passConfirmar').value;
+
+  if (!actual || !nueva || !confirmar) {
+    toast('warning', 'Campos requeridos', 'Complete todos los campos.');
+    return;
+  }
+  if (nueva !== confirmar) {
+    toast('error', 'Error', 'Las contraseñas nuevas no coinciden.');
+    return;
+  }
+  if (nueva.length < 6) {
+    toast('error', 'Error', 'La nueva contraseña debe tener al menos 6 caracteres.');
+    return;
+  }
+
+  try {
+    const resp = await fetchJSON(`${API_NODE}/cambiar-password`, 'POST', {
+      usuario_id: currentUser.id,
+      password_actual: actual,
+      password_nueva: nueva
+    });
+    toast('success', 'Éxito', resp.message || 'Contraseña actualizada correctamente.');
+    cerrarModal('modalCambiarPass');
+  } catch (err) {
+    toast('error', 'Error', err.message || 'No se pudo cambiar la contraseña.');
+  }
+}
+
+async function resetearPassword(userId, nombreUsuario) {
+  if (!confirm(`¿Desea restablecer la contraseña de ${nombreUsuario} a "inapymi"?`)) return;
+  try {
+    const resp = await fetchJSON(`${API_NODE}/usuarios/${userId}/resetear`, 'POST', {
+      usuario_id: currentUser.id
+    });
+    toast('success', 'Contraseña restablecida', resp.message);
+  } catch (err) {
+    toast('error', 'Error', err.message || 'No se pudo restablecer la contraseña.');
+  }
+}
 
 /* ═══════════════════════════════════════════════════════════════════
    PERFIL TRABAJADOR
@@ -696,6 +754,59 @@ async function fetchJSON(url, method = 'GET', body = null) {
   const data = await res.json();
   if (!res.ok) throw new Error(data.error || 'Error de servidor');
   return data;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   CAMBIAR / RESTABLECER CONTRASEÑA
+   ═══════════════════════════════════════════════════════════════════ */
+function abrirModalCambiarPass() {
+  document.getElementById('passActual').value = '';
+  document.getElementById('passNueva').value = '';
+  document.getElementById('passConfirmar').value = '';
+  abrirModal('modalCambiarPass');
+}
+
+async function guardarNuevaPassword() {
+  const actual     = document.getElementById('passActual').value;
+  const nueva      = document.getElementById('passNueva').value;
+  const confirmar  = document.getElementById('passConfirmar').value;
+
+  if (!actual || !nueva || !confirmar) {
+    toast('warning', 'Campos requeridos', 'Complete todos los campos.');
+    return;
+  }
+  if (nueva !== confirmar) {
+    toast('error', 'Error', 'Las contraseñas nuevas no coinciden.');
+    return;
+  }
+  if (nueva.length < 6) {
+    toast('error', 'Error', 'La nueva contraseña debe tener al menos 6 caracteres.');
+    return;
+  }
+
+  try {
+    const resp = await fetchJSON(`${API_NODE}/cambiar-password`, 'POST', {
+      usuario_id: currentUser.id,
+      password_actual: actual,
+      password_nueva: nueva
+    });
+    toast('success', 'Éxito', resp.message || 'Contraseña actualizada correctamente.');
+    cerrarModal('modalCambiarPass');
+  } catch (err) {
+    toast('error', 'Error', err.message || 'No se pudo cambiar la contraseña.');
+  }
+}
+
+async function resetearPassword(userId, nombreUsuario) {
+  if (!confirm(`¿Desea restablecer la contraseña de ${nombreUsuario} a "inapymi"?`)) return;
+  try {
+    const resp = await fetchJSON(`${API_NODE}/usuarios/${userId}/resetear`, 'POST', {
+      usuario_id: currentUser.id
+    });
+    toast('success', 'Contraseña restablecida', resp.message);
+  } catch (err) {
+    toast('error', 'Error', err.message || 'No se pudo restablecer la contraseña.');
+  }
 }
 
 /* ═══════════════════════════════════════════════════════════════════

@@ -104,6 +104,9 @@
     </nav>
 
     <div class="sidebar-footer">
+      <button class="nav-item" id="cambiarPassBtn" style="color:rgba(255,255,255,0.75)" onclick="abrirModalCambiarPass()">
+        <span class="nav-icon">🔑</span> Cambiar Contraseña
+      </button>
       <button class="nav-item" id="logoutBtn" style="color:rgba(255,255,255,0.6)">
         <span class="nav-icon">🚪</span> Cerrar Sesión
       </button>
@@ -308,8 +311,8 @@
                 <div class="form-group">
                   <label class="form-label">Cédula <span class="required">*</span></label>
                   <div class="input-wrap">
-                    <input type="text" id="nuCedula" class="form-control" required placeholder="V-00000000">
-                    <span class="input-icon">🪪</span>
+                    <span class="input-icon" style="font-style:normal;font-weight:700;color:var(--azul-gov);font-size:0.85rem">V-</span>
+                    <input type="text" id="nuCedula" class="form-control" required placeholder="00000000" style="padding-left:36px" maxlength="8" inputmode="numeric">
                   </div>
                 </div>
               </div>
@@ -357,7 +360,7 @@
             <div class="table-wrap">
               <table class="data-table">
                 <thead>
-                  <tr><th>#</th><th>Nombre</th><th>Usuario</th><th>Cédula</th><th>Rol</th><th>Registro</th></tr>
+                  <tr><th>#</th><th>Nombre</th><th>Usuario / Cédula</th><th>Rol</th><th>Registro</th><th>Acciones</th></tr>
                 </thead>
                 <tbody id="usuariosTableBody">
                   <tr><td colspan="6"><div class="loader-wrap"><div class="loader"></div></div></td></tr>
@@ -429,8 +432,8 @@
           <div class="form-group">
             <label class="form-label">Número de Cédula <span class="required">*</span></label>
             <div class="input-wrap">
-              <input type="text" id="regCedula" class="form-control" required placeholder="V-00000000">
-              <span class="input-icon">🪪</span>
+              <span class="input-icon" style="font-style:normal;font-weight:700;color:var(--azul-gov);font-size:0.85rem">V-</span>
+              <input type="text" id="regCedula" class="form-control" required placeholder="00000000" style="padding-left:36px" maxlength="8" inputmode="numeric">
             </div>
           </div>
           <div class="form-group">
@@ -596,6 +599,51 @@
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="cerrarModal('modalConfirmar')">Cancelar</button>
       <button class="btn btn-danger" id="btnConfirmarEliminar">Sí, desactivar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════
+     MODAL: CAMBIAR CONTRASEÑA
+     ════════════════════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="modalCambiarPass">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-header">
+      <div class="modal-title">
+        <div class="modal-icon">🔑</div>
+        <span>Cambiar Contraseña</span>
+      </div>
+      <button class="modal-close" onclick="cerrarModal('modalCambiarPass')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Contraseña actual <span class="required">*</span></label>
+        <div class="input-wrap">
+          <input type="password" id="passActual" class="form-control" placeholder="••••••••">
+          <span class="input-icon">🔒</span>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Nueva contraseña <span class="required">*</span></label>
+        <div class="input-wrap">
+          <input type="password" id="passNueva" class="form-control" placeholder="Mínimo 6 caracteres">
+          <span class="input-icon">🔐</span>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Confirmar nueva contraseña <span class="required">*</span></label>
+        <div class="input-wrap">
+          <input type="password" id="passConfirmar" class="form-control" placeholder="Repita la nueva contraseña">
+          <span class="input-icon">🔐</span>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="cerrarModal('modalCambiarPass')">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardarNuevaPassword()">
+        <span class="btn-spinner"></span>
+        <span class="btn-text">💾 Guardar</span>
+      </button>
     </div>
   </div>
 </div>

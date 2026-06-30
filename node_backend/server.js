@@ -25,7 +25,6 @@ function serveStatic(req, res) {
   let urlPath = req.url.split('?')[0];
   if (urlPath === '/') urlPath = '/index.html';
   const filePath = path.join(FRONTEND, urlPath);
-  // Seguridad: no salir del directorio frontend
   if (!filePath.startsWith(FRONTEND)) { res.writeHead(403); return res.end('Forbidden'); }
   fs.readFile(filePath, (err, data) => {
     if (err) { res.writeHead(404); return res.end('Not found'); }
@@ -88,12 +87,11 @@ db.exec(`
   );
 `);
 
-// Usuarios por defecto
+// Usuarios por defecto (personal administrativo)
 db.exec(`
   INSERT OR IGNORE INTO usuarios (username,password,rol,nombre,apellido,cedula) VALUES
     ('admin','Inapymi2001','administrador','Administrador','Sistema','V-00000001'),
-    ('atencion1','Atencion2024','atencion','Operador','Ciudadano','V-00000002'),
-    ('trabajador1','Trabajador2024','trabajador','Empleado','Demo','V-00000003');
+    ('atencion1','Atencion2024','atencion','Operador','Ciudadano','V-00000002');
 `);
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
@@ -150,9 +148,9 @@ const server = http.createServer(async (req, res) => {
   }
 
   const { parts, params } = urlParts(req.url);
-  // parts[0] = 'api', parts[1] = recurso, parts[2] = id
   const resource = parts[1];
   const id       = parts[2];
+  const subaction = parts[3]; // e.g. /api/usuarios/5/resetear
   const method   = req.method;
 
   try {
@@ -162,15 +160,45 @@ const server = http.createServer(async (req, res) => {
     }
 
     // ── /api/login ───────────────────────────────────────────────────
+    // Acepta: (1) username+password de usuarios administrativos
+    //         (2) cedula+password para trabajadores registrados
     if (resource === 'login' && method === 'POST') {
       const { username, password } = await parseBody(req);
       if (!username || !password) return send(res, 400, { error: 'Usuario y contraseña requeridos.' });
-      const user = db.prepare(
+
+      // Intentar login por username normal
+      let user = db.prepare(
         'SELECT id,username,rol,nombre,apellido FROM usuarios WHERE username=? AND password=? AND activo=1'
       ).get(username, password);
+
+      // Si no encontró por username, intentar por cédula (trabajadores registrados)
+      if (!user) {
+        user = db.prepare(
+          'SELECT id,username,rol,nombre,apellido FROM usuarios WHERE cedula=? AND password=? AND activo=1'
+        ).get(username, password);
+      }
+
       if (!user) return send(res, 401, { error: 'Credenciales inválidas.' });
-      auditar('usuarios','LOGIN', user.id, user.id, `Inicio sesión: ${username}`);
+      auditar('usuarios','LOGIN', user.id, user.id, `Inicio sesión: ${user.username}`);
       return send(res, 200, { success: true, user });
+    }
+
+    // ── /api/cambiar-password ────────────────────────────────────────
+    // El propio usuario cambia su contraseña
+    if (resource === 'cambiar-password' && method === 'POST') {
+      const { usuario_id, password_actual, password_nueva } = await parseBody(req);
+      if (!usuario_id || !password_actual || !password_nueva)
+        return send(res, 400, { error: 'Datos incompletos.' });
+      if (password_nueva.length < 6)
+        return send(res, 400, { error: 'La nueva contraseña debe tener al menos 6 caracteres.' });
+
+      const user = db.prepare('SELECT id FROM usuarios WHERE id=? AND password=? AND activo=1')
+        .get(usuario_id, password_actual);
+      if (!user) return send(res, 401, { error: 'La contraseña actual es incorrecta.' });
+
+      db.prepare('UPDATE usuarios SET password=? WHERE id=?').run(password_nueva, usuario_id);
+      auditar('usuarios', 'CAMBIO_PASSWORD', usuario_id, usuario_id, 'Cambio de contraseña propio');
+      return send(res, 200, { message: 'Contraseña actualizada correctamente.' });
     }
 
     // ── /api/trabajadores ────────────────────────────────────────────
@@ -207,8 +235,18 @@ const server = http.createServer(async (req, res) => {
             d.direccion_vivienda,d.condicion_vivienda,d.condicion_habitantes,
             d.hubo_fallecidos?1:0,d.hubo_heridos?1:0,d.observaciones||null,d.usuario_id||null
           );
-          auditar('trabajadores','INSERT',info.lastInsertRowid,d.usuario_id,`Nuevo: ${d.nombres} ${d.apellidos} ${d.cedula}`);
-          return send(res, 201, { id: info.lastInsertRowid, message: 'Trabajador registrado.' });
+          const newId = info.lastInsertRowid;
+          auditar('trabajadores','INSERT',newId,d.usuario_id,`Nuevo: ${d.nombres} ${d.apellidos} ${d.cedula}`);
+
+          // ── Auto-crear cuenta de acceso para el trabajador ──────────
+          // username = cedula, password = 'inapymi' (contraseña por defecto)
+          try {
+            db.prepare(
+              'INSERT OR IGNORE INTO usuarios (username,password,rol,nombre,apellido,cedula) VALUES (?,?,?,?,?,?)'
+            ).run(d.cedula, 'inapymi', 'trabajador', d.nombres, d.apellidos, d.cedula);
+          } catch(e) { /* si ya existe, no hacer nada */ }
+
+          return send(res, 201, { id: newId, message: 'Trabajador registrado.' });
         } catch(e) {
           if (e.message.includes('UNIQUE')) return send(res, 409, { error: `Ya existe un trabajador con la cédula ${d.cedula}.` });
           return send(res, 500, { error: e.message });
@@ -280,6 +318,23 @@ const server = http.createServer(async (req, res) => {
           ).run(d.username,d.password,d.rol,d.nombre,d.apellido,d.cedula);
           return send(res, 201, { id: info.lastInsertRowid, message: 'Usuario creado.' });
         } catch(e) { return send(res,409,{error:'Usuario o cédula ya existe.'}); }
+      }
+
+      // ── /api/usuarios/:id/resetear  (admin o atencion resetean password) ──
+      if (id && subaction === 'resetear' && method === 'POST') {
+        const d = await parseBody(req);
+        // Solo admin o atencion pueden resetear
+        const solicitante = db.prepare('SELECT rol FROM usuarios WHERE id=? AND activo=1').get(d.usuario_id);
+        if (!solicitante || !['administrador','atencion'].includes(solicitante.rol))
+          return send(res, 403, { error: 'No tiene permisos para esta acción.' });
+
+        const target = db.prepare('SELECT id,nombre,apellido FROM usuarios WHERE id=? AND activo=1').get(id);
+        if (!target) return send(res, 404, { error: 'Usuario no encontrado.' });
+
+        db.prepare("UPDATE usuarios SET password='inapymi' WHERE id=?").run(id);
+        auditar('usuarios','RESET_PASSWORD', id, d.usuario_id,
+          `Contraseña restablecida a default para usuario ID:${id} (${target.nombre} ${target.apellido})`);
+        return send(res, 200, { message: `Contraseña restablecida a "inapymi" correctamente.` });
       }
     }
 

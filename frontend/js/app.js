@@ -558,28 +558,28 @@ async function cargarUsuarios() {
     const rolesLabel = { administrador:'🔴 Admin', atencion:'🟡 Atención', trabajador:'🟢 Trabajador' };
     const puedeReset = currentUser && ['administrador','atencion'].includes(currentUser.rol);
     const isAdmin = currentUser && currentUser.rol === 'administrador';
-    tbody.innerHTML = users.map((u, i) => `
+    
+    // Filtrar para NO mostrar a los trabajadores en esta vista (solo usuarios de sistema)
+    const systemUsers = users.filter(u => u.rol !== 'trabajador');
+
+    tbody.innerHTML = systemUsers.map((u, i) => `
       <tr>
         <td style="color:var(--texto-muted)">${i+1}</td>
         <td><strong>${u.nombre} ${u.apellido}</strong></td>
-        <td><code>${u.username}</code><br><small style="color:var(--texto-muted)">${u.cedula}</small></td>
+        <td><code>${u.username}</code></td>
         <td>${rolesLabel[u.rol] || u.rol}</td>
         <td style="font-size:0.78rem;color:var(--texto-muted)">${formatFecha(u.creado_en)}</td>
         <td>
-          ${puedeReset && u.rol === 'trabajador' ? `
-          <button class="btn btn-secondary btn-sm" onclick="resetearPassword(${u.id}, '${u.nombre} ${u.apellido}')">
-            🔄 Restablecer
-          </button>` : ''}
           ${isAdmin && u.username !== 'admin' ? `
           <button class="btn btn-danger btn-sm" style="padding:4px 8px; font-size:0.8rem; margin-left: 5px;" onclick="eliminarUsuario(${u.id}, '${u.nombre} ${u.apellido}')">
             🗑️ Eliminar
           </button>` : ''}
-          ${!puedeReset && !isAdmin ? '—' : ''}
+          ${!isAdmin ? '—' : ''}
         </td>
       </tr>
     `).join('');
   } catch (err) {
-    tbody.innerHTML = `<tr><td colspan="6"><div class="alert alert-danger">⚠️ ${err.message}</div></td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="5"><div class="alert alert-danger">⚠️ ${err.message}</div></td></tr>`;
   }
 }
 
@@ -588,11 +588,13 @@ document.getElementById('formNuevoUsuario').addEventListener('submit', async (e)
   const btn = e.target.querySelector('[type=submit]');
   setLoading(btn, true);
 
+  const usernameVal = document.getElementById('nuUsername').value.trim();
+
   const datos = {
     nombre:   document.getElementById('nuNombre').value.trim(),
     apellido: document.getElementById('nuApellido').value.trim(),
-    cedula:   document.getElementById('nuCedula').value.trim().toUpperCase(),
-    username: document.getElementById('nuUsername').value.trim(),
+    cedula:   `SYS-${usernameVal.toUpperCase()}`, // Dummy único
+    username: usernameVal,
     password: document.getElementById('nuPassword').value,
     rol:      document.getElementById('nuRol').value
   };

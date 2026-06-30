@@ -308,19 +308,14 @@
                     <span class="input-icon">👤</span>
                   </div>
                 </div>
-                <div class="form-group">
-                  <label class="form-label">Cédula <span class="required">*</span></label>
-                  <div class="input-wrap">
-                    <span class="input-icon" style="font-style:normal;font-weight:700;color:var(--azul-gov);font-size:0.85rem">V-</span>
-                    <input type="text" id="nuCedula" class="form-control" required placeholder="00000000" style="padding-left:36px" maxlength="8" inputmode="numeric">
-                  </div>
-                </div>
+                <!-- Cédula dummy oculta -->
+                <input type="hidden" id="nuCedula" value="SYS-USER">
               </div>
               <div class="form-row cols-3">
                 <div class="form-group">
                   <label class="form-label">Usuario <span class="required">*</span></label>
                   <div class="input-wrap">
-                    <input type="text" id="nuUsername" class="form-control" required placeholder="username">
+                    <input type="text" id="nuUsername" class="form-control" required placeholder="Ej: luzcategui">
                     <span class="input-icon">🔑</span>
                   </div>
                 </div>
@@ -338,7 +333,6 @@
                       <option value="">Seleccionar rol...</option>
                       <option value="administrador">Administrador</option>
                       <option value="atencion">Atención al Ciudadano</option>
-                      <option value="trabajador">Trabajador</option>
                     </select>
                     <span class="input-icon">🎭</span>
                   </div>
@@ -453,6 +447,12 @@
             <div class="input-wrap">
               <input type="text" id="regCargo" class="form-control" required placeholder="Ej: Analista de Sistemas">
               <span class="input-icon">💼</span>
+            </div>
+          </div>
+          <div class="form-group" style="display:none">
+            <label class="form-label">Cédula <span class="required">*</span></label>
+            <div class="input-wrap">
+              <input type="text" id="nuCedula" class="form-control" value="SYS-USER">
             </div>
           </div>
           <div class="form-group">

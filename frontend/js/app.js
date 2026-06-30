@@ -129,7 +129,12 @@ function iniciarApp() {
   document.getElementById('userRol').textContent    = labelRol(currentUser.rol);
 
   renderizarNav();
-  cargarDashboard();
+  
+  // Navegar a la primera página disponible según el rol
+  const items = navConfig[currentUser.rol] || [];
+  if (items.length > 0) {
+    navegarA(items[0].id);
+  }
 }
 
 function labelRol(rol) {

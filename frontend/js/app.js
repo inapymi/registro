@@ -557,6 +557,7 @@ async function cargarUsuarios() {
     const users = await apiFetch('/usuarios');
     const rolesLabel = { administrador:'🔴 Admin', atencion:'🟡 Atención', trabajador:'🟢 Trabajador' };
     const puedeReset = currentUser && ['administrador','atencion'].includes(currentUser.rol);
+    const isAdmin = currentUser && currentUser.rol === 'administrador';
     tbody.innerHTML = users.map((u, i) => `
       <tr>
         <td style="color:var(--texto-muted)">${i+1}</td>
@@ -564,10 +565,16 @@ async function cargarUsuarios() {
         <td><code>${u.username}</code><br><small style="color:var(--texto-muted)">${u.cedula}</small></td>
         <td>${rolesLabel[u.rol] || u.rol}</td>
         <td style="font-size:0.78rem;color:var(--texto-muted)">${formatFecha(u.creado_en)}</td>
-        <td>${puedeReset && u.rol === 'trabajador' ? `
+        <td>
+          ${puedeReset && u.rol === 'trabajador' ? `
           <button class="btn btn-secondary btn-sm" onclick="resetearPassword(${u.id}, '${u.nombre} ${u.apellido}')">
             🔄 Restablecer
-          </button>` : '—'}
+          </button>` : ''}
+          ${isAdmin && u.username !== 'admin' ? `
+          <button class="btn btn-danger btn-sm" style="padding:4px 8px; font-size:0.8rem; margin-left: 5px;" onclick="eliminarUsuario(${u.id}, '${u.nombre} ${u.apellido}')">
+            🗑️ Eliminar
+          </button>` : ''}
+          ${!puedeReset && !isAdmin ? '—' : ''}
         </td>
       </tr>
     `).join('');
@@ -811,6 +818,17 @@ async function resetearPassword(userId, nombreUsuario) {
     toast('success', 'Contraseña restablecida', resp.message);
   } catch (err) {
     toast('error', 'Error', err.message || 'No se pudo restablecer la contraseña.');
+  }
+}
+
+async function eliminarUsuario(userId, nombreUsuario) {
+  if (!confirm(`⚠️ ¿ESTÁ SEGURO?\n\nVa a eliminar por completo el acceso del usuario: ${nombreUsuario}.\nEsta acción no se puede deshacer.`)) return;
+  try {
+    const resp = await fetchJSON(`${API_NODE}/usuarios/${userId}`, 'DELETE');
+    toast('success', 'Usuario eliminado', resp.message);
+    cargarUsuarios(); // Recargar tabla
+  } catch (err) {
+    toast('error', 'Error', err.message || 'No se pudo eliminar al usuario.');
   }
 }
 

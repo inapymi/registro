@@ -319,6 +319,13 @@ const server = http.createServer(async (req, res) => {
           return send(res, 201, { id: info.lastInsertRowid, message: 'Usuario creado.' });
         } catch(e) { return send(res,409,{error:'Usuario o cédula ya existe.'}); }
       }
+      
+      if (method === 'DELETE' && id) {
+        const target = db.prepare('SELECT username FROM usuarios WHERE id=?').get(id);
+        if (target && target.username === 'admin') return send(res, 403, { error: 'No se puede eliminar al admin principal.' });
+        db.prepare('DELETE FROM usuarios WHERE id=?').run(id);
+        return send(res, 200, { message: 'Usuario eliminado correctamente.' });
+      }
 
       // ── /api/usuarios/:id/resetear  (admin o atencion resetean password) ──
       if (id && subaction === 'resetear' && method === 'POST') {

@@ -43,7 +43,7 @@ body {
   color: var(--texto);
   min-height: 100vh;
   overflow-x: hidden;
-  padding-top: 136px; /* 72px cabecera + 64px topbar */
+  padding-top: 154px; /* 90px cabecera + 64px topbar */
 }
 
 /* ─── Scrollbar personalizada ───────────────────────────────────── */
@@ -55,7 +55,7 @@ body {
    PANTALLA DE LOGIN
    ═══════════════════════════════════════════════════════════════════ */
 .login-screen {
-  min-height: calc(100vh - 136px);
+  min-height: calc(100vh - 154px);
   display: flex;
   flex-direction: column;
   position: relative;
@@ -100,20 +100,18 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  border-bottom: 4px solid var(--rojo);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.12);
   position: fixed;
   top: 0; left: 0; right: 0;
   z-index: 10000;
-  height: 72px;
+  height: 90px;
   overflow: hidden;
 }
 
 .gob-banner img {
   width: 100%;
   height: 100%;
-  object-fit: contain;
-  object-position: center;
+  object-fit: fill;
   display: block;
 }
 
@@ -437,12 +435,12 @@ textarea.form-control {
 /* ─── Sidebar ───────────────────────────────────────────────────── */
 .sidebar {
   width: 310px;
-  min-height: calc(100vh - 136px);
+  min-height: calc(100vh - 154px);
   background: linear-gradient(180deg, var(--azul-gov-dark) 0%, var(--azul-gov) 100%);
   display: flex;
   flex-direction: column;
   position: fixed;
-  left: 0; top: 136px; bottom: 0;
+  left: 0; top: 154px; bottom: 0;
   z-index: 100;
   transition: transform var(--transicion);
   box-shadow: 4px 0 24px rgba(0,0,0,0.15);
@@ -580,11 +578,11 @@ textarea.form-control {
   margin-left: 310px;
   display: flex;
   flex-direction: column;
-  min-height: calc(100vh - 136px);
+  min-height: calc(100vh - 154px);
   overflow-x: hidden;
   min-width: 0;
   max-width: calc(100vw - 310px);
-  margin-top: 136px; /* 72px cabecera + 64px topbar */
+  margin-top: 154px; /* 90px cabecera + 64px topbar */
 }
 
 /* ─── Top Bar ──────────────────────────────────────────────── */
@@ -598,7 +596,7 @@ textarea.form-control {
   border-bottom: 1px solid #e5e7eb;
   box-shadow: 0 4px 16px rgba(0,0,0,0.08);
   position: fixed;
-  top: 72px; /* justo debajo de la cabecera */
+  top: 90px; /* justo debajo de la cabecera */
   left: 0;   /* ancho completo de la pantalla */
   right: 0;
   z-index: 99;
